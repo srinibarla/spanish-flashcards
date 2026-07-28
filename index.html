@@ -258,11 +258,34 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
+        }
+
+        .quiz-input-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .quiz-input-row input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #0f3460;
+            border-radius: 12px;
+            background: #16213e;
+            color: #eee;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .quiz-input-row input:focus {
+            border-color: #e94560;
         }
 
         .quiz-heard {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: #ddd;
             padding: 10px 20px;
@@ -295,10 +318,16 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
+            width: 100%;
         }
 
         .quiz-submit:hover {
             background: #c23152;
+        }
+
+        .quiz-submit:disabled {
+            opacity: 0.5;
+            cursor: default;
         }
 
         .quiz-feedback {
@@ -475,10 +504,13 @@
             </div>
 
             <div class="quiz-input-area">
-                <button class="btn-mic" id="btnMic" title="Tap to speak your answer">&#127908;</button>
-                <div class="speech-status" id="speechStatus">Tap the mic and say your answer</div>
+                <div class="quiz-input-row">
+                    <input type="text" id="quizInput" placeholder="Type your answer..." autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <button class="btn-mic" id="btnMic" title="Tap to speak your answer">&#127908;</button>
+                </div>
+                <button class="quiz-submit" id="quizSubmit">Check</button>
+                <div class="speech-status" id="speechStatus"></div>
                 <div class="quiz-heard hidden" id="quizHeard"></div>
-                <button class="quiz-submit hidden" id="quizSubmit">Next</button>
             </div>
 
             <div class="quiz-feedback hidden" id="quizFeedback">

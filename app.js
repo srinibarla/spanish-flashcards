@@ -145,6 +145,7 @@ const tabQuiz = document.getElementById("tabQuiz");
 
 const quizWord = document.getElementById("quizWord");
 const quizCategory = document.getElementById("quizCategory");
+const quizInput = document.getElementById("quizInput");
 const quizSubmit = document.getElementById("quizSubmit");
 const quizFeedback = document.getElementById("quizFeedback");
 const quizFeedbackText = document.getElementById("quizFeedbackText");
@@ -179,7 +180,7 @@ if (SpeechRecognition) {
     recognition.onresult = (event) => {
         let transcript = event.results[0][0].transcript;
         spokenAnswer = transcript;
-        quizHeard.textContent = `"${transcript}"`;
+        quizInput.value = transcript;
         stopListening();
         setTimeout(() => checkAnswer(), 300);
     };
@@ -349,13 +350,15 @@ function updateQuizDisplay() {
     const item = currentCards[currentIndex];
     if (direction === "en-es") {
         quizWord.textContent = item.en;
-        quizCategory.textContent = item.cat + " — Say it in Spanish";
+        quizCategory.textContent = item.cat + " — Answer in Spanish";
     } else {
         quizWord.textContent = item.es;
-        quizCategory.textContent = item.cat + " — Say it in English";
+        quizCategory.textContent = item.cat + " — Answer in English";
     }
 
     spokenAnswer = "";
+    quizInput.value = "";
+    quizInput.disabled = false;
     quizHeard.classList.add("hidden");
     quizHeard.classList.remove("correct", "wrong");
     quizHeard.textContent = "";
@@ -363,10 +366,9 @@ function updateQuizDisplay() {
     quizFeedback.className = "quiz-feedback hidden";
     quizFeedbackText.textContent = "";
     quizCorrectAnswer.textContent = "";
-    quizSubmit.classList.add("hidden");
-    quizSubmit.textContent = "Next";
+    quizSubmit.textContent = "Check";
     quizAnswered = false;
-    speechStatus.textContent = "Tap the mic and say your answer";
+    speechStatus.textContent = "";
     speechStatus.classList.remove("listening-text");
 
     progressText.textContent = `${currentIndex + 1} / ${currentCards.length}`;
@@ -391,11 +393,12 @@ function checkAnswer() {
         return;
     }
 
-    const item = currentCards[currentIndex];
-    const userAnswer = normalizeAnswer(spokenAnswer);
+    // Use typed input or spoken answer
+    const userAnswer = normalizeAnswer(quizInput.value || spokenAnswer);
 
     if (!userAnswer) return;
 
+    const item = currentCards[currentIndex];
     let correctAnswer;
     let speakLang;
     if (direction === "en-es") {
@@ -416,18 +419,23 @@ function checkAnswer() {
 
     quizFeedback.classList.remove("hidden");
     quizAnswered = true;
-    quizSubmit.classList.remove("hidden");
+    quizInput.disabled = true;
+    quizSubmit.textContent = "Next →";
     speechStatus.textContent = "";
 
     if (isCorrect) {
         quizCorrect++;
+        quizHeard.classList.remove("hidden");
         quizHeard.classList.add("correct");
+        quizHeard.textContent = "Correct!";
         quizFeedback.className = "quiz-feedback correct";
-        quizFeedbackText.textContent = "Correct!";
-        quizCorrectAnswer.textContent = correctAnswer;
+        quizFeedbackText.textContent = correctAnswer;
+        quizCorrectAnswer.textContent = "";
     } else {
         quizWrong++;
+        quizHeard.classList.remove("hidden");
         quizHeard.classList.add("wrong");
+        quizHeard.textContent = "Wrong!";
         quizFeedback.className = "quiz-feedback wrong";
         quizFeedbackText.textContent = "The correct answer is:";
         quizCorrectAnswer.textContent = correctAnswer;
@@ -519,8 +527,14 @@ categoryFilter.addEventListener("change", filterByCategory);
 tabFlashcard.addEventListener("click", () => switchMode("flashcard"));
 tabQuiz.addEventListener("click", () => switchMode("quiz"));
 
-quizSubmit.addEventListener("click", () => nextCard());
+quizSubmit.addEventListener("click", checkAnswer);
 btnMic.addEventListener("click", toggleListening);
+quizInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        checkAnswer();
+    }
+});
 
 // Keyboard shortcuts (flashcard mode only)
 document.addEventListener("keydown", (e) => {
