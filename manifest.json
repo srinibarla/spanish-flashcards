@@ -2,7 +2,7 @@
     "name": "Spanish Flashcards",
     "short_name": "Flashcards",
     "description": "Learn Spanish vocabulary with flashcards and quizzes",
-    "start_url": "/index.html",
+    "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#1a1a2e",
     "theme_color": "#1a1a2e",
