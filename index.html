@@ -257,37 +257,36 @@
             max-width: 400px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            align-items: center;
+            gap: 14px;
         }
 
-        .quiz-input-area input {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid #0f3460;
+        .quiz-heard {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ddd;
+            padding: 10px 20px;
             border-radius: 12px;
             background: #16213e;
-            color: #eee;
-            font-size: 1.1rem;
-            outline: none;
-            transition: border-color 0.2s;
+            border: 1px solid #0f3460;
+            min-width: 200px;
+            text-align: center;
         }
 
-        .quiz-input-area input:focus {
-            border-color: #e94560;
-        }
-
-        .quiz-input-area input.correct {
+        .quiz-heard.correct {
             border-color: #40916c;
             background: #1b4332;
+            color: #95d5b2;
         }
 
-        .quiz-input-area input.wrong {
+        .quiz-heard.wrong {
             border-color: #d00000;
             background: #3d0000;
+            color: #ffb3b3;
         }
 
         .quiz-submit {
-            padding: 12px;
+            padding: 12px 32px;
             border: none;
             border-radius: 12px;
             background: #e94560;
@@ -346,27 +345,16 @@
 
         .hidden { display: none !important; }
 
-        .quiz-input-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .quiz-input-row input {
-            flex: 1;
-        }
-
         .btn-mic {
-            width: 48px;
-            height: 48px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            border: 2px solid #0f3460;
+            border: 3px solid #0f3460;
             background: #1a1a2e;
             color: #ddd;
-            font-size: 1.4rem;
+            font-size: 2rem;
             cursor: pointer;
             transition: all 0.2s;
-            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -375,6 +363,7 @@
         .btn-mic:hover {
             border-color: #e94560;
             color: #e94560;
+            transform: scale(1.05);
         }
 
         .btn-mic.listening {
@@ -486,12 +475,10 @@
             </div>
 
             <div class="quiz-input-area">
-                <div class="quiz-input-row">
-                    <input type="text" id="quizInput" placeholder="Type or speak your answer..." autocomplete="off" autocapitalize="off" spellcheck="false">
-                    <button class="btn-mic" id="btnMic" title="Speak your answer">&#127908;</button>
-                </div>
-                <div class="speech-status" id="speechStatus"></div>
-                <button class="quiz-submit" id="quizSubmit">Check Answer</button>
+                <button class="btn-mic" id="btnMic" title="Tap to speak your answer">&#127908;</button>
+                <div class="speech-status" id="speechStatus">Tap the mic and say your answer</div>
+                <div class="quiz-heard hidden" id="quizHeard"></div>
+                <button class="quiz-submit hidden" id="quizSubmit">Next</button>
             </div>
 
             <div class="quiz-feedback hidden" id="quizFeedback">

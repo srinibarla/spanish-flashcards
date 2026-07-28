@@ -145,7 +145,6 @@ const tabQuiz = document.getElementById("tabQuiz");
 
 const quizWord = document.getElementById("quizWord");
 const quizCategory = document.getElementById("quizCategory");
-const quizInput = document.getElementById("quizInput");
 const quizSubmit = document.getElementById("quizSubmit");
 const quizFeedback = document.getElementById("quizFeedback");
 const quizFeedbackText = document.getElementById("quizFeedbackText");
@@ -154,11 +153,14 @@ const quizRightEl = document.getElementById("quizRight");
 const quizWrongEl = document.getElementById("quizWrong");
 const btnMic = document.getElementById("btnMic");
 const speechStatus = document.getElementById("speechStatus");
+const quizHeard = document.getElementById("quizHeard");
 
 // ============ SPEECH RECOGNITION ============
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let isListening = false;
+
+let spokenAnswer = "";
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -170,6 +172,8 @@ if (SpeechRecognition) {
         btnMic.classList.add("listening");
         speechStatus.textContent = "Listening...";
         speechStatus.classList.add("listening-text");
+        quizHeard.classList.remove("hidden", "correct", "wrong");
+        quizHeard.textContent = "...";
     };
 
     recognition.onresult = (event) => {
@@ -177,22 +181,22 @@ if (SpeechRecognition) {
         for (let i = event.resultIndex; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;
         }
-        quizInput.value = transcript;
+        spokenAnswer = transcript;
+        quizHeard.textContent = `"${transcript}"`;
         if (event.results[event.results.length - 1].isFinal) {
             stopListening();
-            speechStatus.textContent = "Got it! Checking...";
-            setTimeout(() => checkAnswer(), 500);
+            setTimeout(() => checkAnswer(), 400);
         }
     };
 
     recognition.onerror = (event) => {
         stopListening();
         if (event.error === "no-speech") {
-            speechStatus.textContent = "No speech detected. Try again.";
+            speechStatus.textContent = "No speech detected. Tap mic to try again.";
         } else if (event.error === "not-allowed") {
             speechStatus.textContent = "Microphone access denied. Check permissions.";
         } else {
-            speechStatus.textContent = `Error: ${event.error}`;
+            speechStatus.textContent = `Error: ${event.error}. Tap mic to retry.`;
         }
     };
 
@@ -201,18 +205,17 @@ if (SpeechRecognition) {
     };
 } else {
     btnMic.style.display = "none";
-    speechStatus.textContent = "Speech not supported in this browser.";
+    speechStatus.textContent = "Speech not supported in this browser. Use Chrome.";
 }
 
 function startListening() {
     if (!recognition || quizAnswered) return;
-    // Set language based on what the user needs to speak
     if (direction === "en-es") {
         recognition.lang = "es-ES";
     } else {
         recognition.lang = "en-US";
     }
-    quizInput.value = "";
+    spokenAnswer = "";
     recognition.start();
 }
 
@@ -228,7 +231,7 @@ function stopListening() {
 function toggleListening() {
     if (isListening) {
         stopListening();
-        speechStatus.textContent = "";
+        speechStatus.textContent = "Tap the mic and say your answer";
     } else {
         startListening();
     }
@@ -333,23 +336,24 @@ function updateQuizDisplay() {
     const item = currentCards[currentIndex];
     if (direction === "en-es") {
         quizWord.textContent = item.en;
-        quizCategory.textContent = item.cat + " — Type the Spanish";
+        quizCategory.textContent = item.cat + " — Say it in Spanish";
     } else {
         quizWord.textContent = item.es;
-        quizCategory.textContent = item.cat + " — Type the English";
+        quizCategory.textContent = item.cat + " — Say it in English";
     }
 
-    quizInput.value = "";
-    quizInput.className = "";
-    quizInput.disabled = false;
-    quizInput.focus();
+    spokenAnswer = "";
+    quizHeard.classList.add("hidden");
+    quizHeard.classList.remove("correct", "wrong");
+    quizHeard.textContent = "";
     quizFeedback.classList.add("hidden");
     quizFeedback.className = "quiz-feedback hidden";
     quizFeedbackText.textContent = "";
     quizCorrectAnswer.textContent = "";
-    quizSubmit.textContent = "Check Answer";
+    quizSubmit.classList.add("hidden");
+    quizSubmit.textContent = "Next";
     quizAnswered = false;
-    speechStatus.textContent = "";
+    speechStatus.textContent = "Tap the mic and say your answer";
     speechStatus.classList.remove("listening-text");
 
     progressText.textContent = `${currentIndex + 1} / ${currentCards.length}`;
@@ -362,7 +366,7 @@ function normalizeAnswer(str) {
     return str
         .toLowerCase()
         .trim()
-        .replace(/[¿¡.,;:!?'"()]/g, "")
+        .replace(/[¿¡.,;:!?'"()\/]/g, "")
         .replace(/\s+/g, " ");
 }
 
@@ -375,7 +379,7 @@ function checkAnswer() {
     }
 
     const item = currentCards[currentIndex];
-    const userAnswer = normalizeAnswer(quizInput.value);
+    const userAnswer = normalizeAnswer(spokenAnswer);
 
     if (!userAnswer) return;
 
@@ -386,11 +390,9 @@ function checkAnswer() {
         correctAnswer = item.en;
     }
 
-    // Check against all possible acceptable answers (split by ; )
     const acceptableAnswers = correctAnswer.split(";").map(a => normalizeAnswer(a));
     const isCorrect = acceptableAnswers.some(acceptable => {
         if (userAnswer === acceptable) return true;
-        // Also accept if user's answer is contained in acceptable or vice versa
         if (acceptable.includes(userAnswer) && userAnswer.length >= 3) return true;
         if (userAnswer.includes(acceptable) && acceptable.length >= 3) return true;
         return false;
@@ -398,23 +400,23 @@ function checkAnswer() {
 
     quizFeedback.classList.remove("hidden");
     quizAnswered = true;
-    quizSubmit.textContent = "Next →";
+    quizSubmit.classList.remove("hidden");
+    speechStatus.textContent = "";
 
     if (isCorrect) {
         quizCorrect++;
-        quizInput.className = "correct";
+        quizHeard.classList.add("correct");
         quizFeedback.className = "quiz-feedback correct";
         quizFeedbackText.textContent = "Correct!";
         quizCorrectAnswer.textContent = correctAnswer;
     } else {
         quizWrong++;
-        quizInput.className = "wrong";
+        quizHeard.classList.add("wrong");
         quizFeedback.className = "quiz-feedback wrong";
         quizFeedbackText.textContent = "Not quite. The answer is:";
         quizCorrectAnswer.textContent = correctAnswer;
     }
 
-    quizInput.disabled = true;
     quizRightEl.textContent = `Correct: ${quizCorrect}`;
     quizWrongEl.textContent = `Wrong: ${quizWrong}`;
 }
@@ -499,14 +501,8 @@ categoryFilter.addEventListener("change", filterByCategory);
 tabFlashcard.addEventListener("click", () => switchMode("flashcard"));
 tabQuiz.addEventListener("click", () => switchMode("quiz"));
 
-quizSubmit.addEventListener("click", checkAnswer);
+quizSubmit.addEventListener("click", () => nextCard());
 btnMic.addEventListener("click", toggleListening);
-quizInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        checkAnswer();
-    }
-});
 
 // Keyboard shortcuts (flashcard mode only)
 document.addEventListener("keydown", (e) => {
