@@ -159,13 +159,13 @@ const quizHeard = document.getElementById("quizHeard");
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let isListening = false;
-
 let spokenAnswer = "";
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.interimResults = true;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 3;
 
     recognition.onstart = () => {
         isListening = true;
@@ -177,16 +177,11 @@ if (SpeechRecognition) {
     };
 
     recognition.onresult = (event) => {
-        let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-        }
+        let transcript = event.results[0][0].transcript;
         spokenAnswer = transcript;
         quizHeard.textContent = `"${transcript}"`;
-        if (event.results[event.results.length - 1].isFinal) {
-            stopListening();
-            setTimeout(() => checkAnswer(), 400);
-        }
+        stopListening();
+        setTimeout(() => checkAnswer(), 300);
     };
 
     recognition.onerror = (event) => {
@@ -194,18 +189,24 @@ if (SpeechRecognition) {
         if (event.error === "no-speech") {
             speechStatus.textContent = "No speech detected. Tap mic to try again.";
         } else if (event.error === "not-allowed") {
-            speechStatus.textContent = "Microphone access denied. Check permissions.";
+            speechStatus.textContent = "Microphone blocked. Allow mic in browser settings.";
+        } else if (event.error === "network") {
+            speechStatus.textContent = "Network error. Check internet connection.";
         } else {
             speechStatus.textContent = `Error: ${event.error}. Tap mic to retry.`;
         }
     };
 
     recognition.onend = () => {
-        stopListening();
+        if (isListening) {
+            isListening = false;
+            btnMic.classList.remove("listening");
+            speechStatus.classList.remove("listening-text");
+        }
     };
 } else {
     btnMic.style.display = "none";
-    speechStatus.textContent = "Speech not supported in this browser. Use Chrome.";
+    speechStatus.textContent = "Speech not supported. Use Chrome on your phone.";
 }
 
 function startListening() {
@@ -216,16 +217,18 @@ function startListening() {
         recognition.lang = "en-US";
     }
     spokenAnswer = "";
-    recognition.start();
+    try {
+        recognition.start();
+    } catch (e) {
+        speechStatus.textContent = "Mic busy. Tap again.";
+    }
 }
 
 function stopListening() {
     isListening = false;
     btnMic.classList.remove("listening");
     speechStatus.classList.remove("listening-text");
-    if (recognition) {
-        try { recognition.stop(); } catch (e) {}
-    }
+    try { recognition.stop(); } catch (e) {}
 }
 
 function toggleListening() {
@@ -235,6 +238,16 @@ function toggleListening() {
     } else {
         startListening();
     }
+}
+
+// Text-to-speech for pronouncing correct answers
+function speakText(text, lang) {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = 0.8;
+    window.speechSynthesis.speak(utterance);
 }
 
 // ============ PERSISTENCE ============
@@ -384,10 +397,13 @@ function checkAnswer() {
     if (!userAnswer) return;
 
     let correctAnswer;
+    let speakLang;
     if (direction === "en-es") {
         correctAnswer = item.es;
+        speakLang = "es-ES";
     } else {
         correctAnswer = item.en;
+        speakLang = "en-US";
     }
 
     const acceptableAnswers = correctAnswer.split(";").map(a => normalizeAnswer(a));
@@ -413,8 +429,10 @@ function checkAnswer() {
         quizWrong++;
         quizHeard.classList.add("wrong");
         quizFeedback.className = "quiz-feedback wrong";
-        quizFeedbackText.textContent = "Not quite. The answer is:";
+        quizFeedbackText.textContent = "The correct answer is:";
         quizCorrectAnswer.textContent = correctAnswer;
+        // Speak the correct answer aloud
+        setTimeout(() => speakText(correctAnswer.split(";")[0].trim(), speakLang), 300);
     }
 
     quizRightEl.textContent = `Correct: ${quizCorrect}`;
