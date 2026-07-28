@@ -359,7 +359,21 @@
 
         .quiz-feedback .correct-answer {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.3rem;
+            margin-top: 8px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .quiz-feedback .correct-answer:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .quiz-feedback .tap-to-hear {
+            font-size: 0.7rem;
+            color: #aaa;
             margin-top: 4px;
         }
 
@@ -516,6 +530,7 @@
             <div class="quiz-feedback hidden" id="quizFeedback">
                 <span id="quizFeedbackText"></span>
                 <span class="correct-answer" id="quizCorrectAnswer"></span>
+                <span class="tap-to-hear" id="tapToHear">tap to hear pronunciation</span>
             </div>
         </div>
     </div>

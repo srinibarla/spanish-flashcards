@@ -301,10 +301,28 @@ function updateFlashcardDisplay() {
     scoreDont.textContent = `Learning: ${learningSet.size}`;
 
     card.classList.remove("flipped");
+
+    // Pronounce the front word
+    const frontText = (direction === "en-es") ? item.en : item.es;
+    const frontLang = (direction === "en-es") ? "en-US" : "es-ES";
+    speakText(frontText.split(";")[0].trim(), frontLang);
 }
 
 function flipCard() {
     card.classList.toggle("flipped");
+    // Pronounce the back word when flipped
+    if (currentCards.length === 0) return;
+    const item = currentCards[currentIndex];
+    const isFlipped = card.classList.contains("flipped");
+    if (isFlipped) {
+        const backText = (direction === "en-es") ? item.es : item.en;
+        const backLang = (direction === "en-es") ? "es-ES" : "en-US";
+        speakText(backText.split(";")[0].trim(), backLang);
+    } else {
+        const frontText = (direction === "en-es") ? item.en : item.es;
+        const frontLang = (direction === "en-es") ? "en-US" : "es-ES";
+        speakText(frontText.split(";")[0].trim(), frontLang);
+    }
 }
 
 function nextCard() {
@@ -534,6 +552,21 @@ quizInput.addEventListener("keydown", (e) => {
         e.preventDefault();
         checkAnswer();
     }
+});
+
+// Tap the correct answer to hear it spoken
+document.getElementById("quizCorrectAnswer").addEventListener("click", () => {
+    const text = quizCorrectAnswer.textContent;
+    if (!text) return;
+    const lang = (direction === "en-es") ? "es-ES" : "en-US";
+    speakText(text, lang);
+});
+
+document.getElementById("quizFeedback").addEventListener("click", () => {
+    const text = quizCorrectAnswer.textContent;
+    if (!text) return;
+    const lang = (direction === "en-es") ? "es-ES" : "en-US";
+    speakText(text, lang);
 });
 
 // Keyboard shortcuts (flashcard mode only)
